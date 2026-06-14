@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CoinPort — Assets & P2P (Demo)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root{
+    --bg:#0d1117;
+    --panel:#161b22;
+    --panel-2:#1f2630;
+    --line:#2b3340;
+    --ink:#e6edf3;
+    --ink-dim:#7d8b9c;
+    --green:#1ec98b;
+    --red:#ef5d5d;
+    --accent:#3b82f6;
+    --gold:#f0b90b;
+    --mono:'SF Mono','Roboto Mono',monospace;
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+  }
+  .demo-banner{
+    background:#2a2008; border-bottom:2px solid var(--gold); color:var(--gold);
+    text-align:center; font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; padding:7px 10px;
+  }
+  .demo-banner span{ color:var(--ink-dim); font-weight:400; text-transform:none; letter-spacing:normal; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 16px; background:var(--panel); border-bottom:1px solid var(--line);
+  }
+  .brand{ font-size:18px; font-weight:800; letter-spacing:-.02em; }
+  .brand span{ color:var(--accent); }
+  .topbar-icons{ display:flex; gap:14px; font-size:18px; color:var(--ink-dim); }
+
+  .content{ padding-bottom:80px; }
+
+  /* Assets header */
+  .assets-hero{
+    padding:18px 16px; background:linear-gradient(180deg, #1a2230 0%, var(--bg) 100%);
+  }
+  .assets-hero .label{ font-size:12px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+  .assets-hero .total{ font-size:32px; font-weight:800; font-family:var(--mono); }
+  .assets-hero .total small{ font-size:16px; color:var(--ink-dim); font-weight:600; }
+  .assets-hero .sub{ font-size:13px; color:var(--ink-dim); margin-top:4px; }
+  .assets-hero .change{ color:var(--green); font-weight:700; }
+
+  .action-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+    padding:14px 16px 4px;
+  }
+  .action-btn{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 6px; text-align:center; font-size:11px; font-weight:600; color:var(--ink);
+    cursor:pointer;
+  }
+  .action-btn .icon{ font-size:18px; display:block; margin-bottom:4px; }
+
+  .section-title{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 16px 8px; font-size:14px; font-weight:700;
+  }
+  .section-title .more{ font-size:12px; color:var(--ink-dim); font-weight:500; cursor:pointer; }
+
+  /* Asset list */
+  .asset-list{ padding:0 16px; }
+  .asset-row{
+    display:flex; align-items:center; gap:12px; padding:10px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .asset-row:last-child{ border-bottom:none; }
+  .coin-icon{
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;
+  }
+  .coin-icon.usdt{ background:#1a4d3d; color:#1ec98b; }
+  .coin-icon.btc{ background:#3a2c10; color:#f0b90b; }
+  .coin-icon.eth{ background:#1c2840; color:#7fa8ff; }
+  .coin-icon.trx{ background:#2c1a3a; color:#c98bf0; }
+  .asset-info{ flex:1; min-width:0; }
+  .asset-info .name{ font-weight:700; font-size:14px; }
+  .asset-info .full{ font-size:11px; color:var(--ink-dim); }
+  .asset-values{ text-align:right; }
+  .asset-values .amt{ font-family:var(--mono); font-weight:700; font-size:14px; }
+  .asset-values .usd{ font-size:11px; color:var(--ink-dim); }
+
+  /* P2P */
+  .p2p-tabs{
+    display:flex; gap:8px; padding:14px 16px 0;
+  }
+  .p2p-tab{
+    flex:1; text-align:center; padding:10px; border-radius:10px;
+    font-size:13px; font-weight:700; background:var(--panel); border:1px solid var(--line);
+    color:var(--ink-dim); cursor:pointer;
+  }
+  .p2p-tab.active{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  .p2p-filter{
+    display:flex; gap:8px; padding:12px 16px; overflow-x:auto;
+  }
+  .filter-chip{
+    flex-shrink:0; font-size:12px; padding:6px 12px; border-radius:20px;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink-dim); font-weight:600;
+  }
+  .filter-chip.active{ background:rgba(59,130,246,.15); border-color:var(--accent); color:var(--accent); }
+
+  .p2p-offer{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin:0 16px 10px;
+  }
+  .p2p-offer .merchant-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .avatar{
+    width:30px; height:30px; border-radius:50%; background:var(--panel-2);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--accent);
+  }
+  .merchant-name{ font-weight:700; font-size:13px; }
+  .merchant-meta{ font-size:11px; color:var(--ink-dim); }
+  .verified-badge{
+    font-size:9px; background:rgba(30,201,139,.15); color:var(--green);
+    border-radius:5px; padding:2px 5px; font-weight:700; margin-left:4px;
+  }
+  .p2p-price{ font-size:22px; font-weight:800; font-family:var(--mono); color:var(--green); margin:8px 0 2px; }
+  .p2p-price.sell{ color:var(--red); }
+  .p2p-details{ display:flex; justify-content:space-between; font-size:12px; color:var(--ink-dim); margin-bottom:10px; }
+  .p2p-details b{ color:var(--ink); }
+  .pay-methods{ display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .pay-chip{
+    font-size:10px; padding:3px 8px; border-radius:6px; background:var(--panel-2);
+    color:var(--ink-dim); border:1px solid var(--line);
+  }
+  .offer-btn{
+    width:100%; padding:11px; border-radius:10px; border:none; font-weight:700; font-size:13px; cursor:pointer;
+  }
+  .offer-btn.buy{ background:var(--green); color:#06241a; }
+  .offer-btn.sell{ background:var(--red); color:#2a0f0f; }
+
+  /* bottom nav */
+  .bottom-nav{
+    position:fixed; bottom:0; left:0; right:0; background:var(--panel);
+    border-top:1px solid var(--line); display:flex; padding:6px 8px; z-index:5;
+  }
+  .nav-btn{ flex:1; text-align:center; padding:8px 4px; border-radius:10px; font-size:11px; color:var(--ink-dim); font-weight:600; cursor:pointer; }
+  .nav-btn.active{ color:var(--accent); background:var(--panel-2); }
+  .nav-icon{ font-size:18px; display:block; margin-bottom:3px; }
+
+  .hidden{ display:none !important; }
+
+  /* Sub-page header (back nav) */
+  .subheader{
+    display:flex; align-items:center; gap:12px; padding:14px 16px;
+    background:var(--panel); border-bottom:1px solid var(--line); position:relative;
+  }
+  .back-btn{
+    width:32px; height:32px; border-radius:50%; background:var(--panel-2);
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+    color:var(--ink); cursor:pointer; flex-shrink:0;
+  }
+  .subheader .title{ font-size:16px; font-weight:700; }
+
+  /* Order detail / chat */
+  .order-summary{
+    background:var(--panel); border-bottom:1px solid var(--line); padding:16px;
+  }
+  .order-summary .top-row{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .order-summary .amount{ font-size:24px; font-weight:800; font-family:var(--mono); }
+  .order-status{
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:8px; text-transform:uppercase;
+  }
+  .order-status.pending{ background:rgba(240,185,11,.15); color:var(--gold); }
+  .order-status.paid{ background:rgba(59,130,246,.15); color:var(--accent); }
+  .order-status.completed{ background:rgba(30,201,139,.15); color:var(--green); }
+  .order-status.cancelled{ background:rgba(239,93,93,.15); color:var(--red); }
+  .order-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+  .order-field .label{ font-size:11px; color:var(--ink-dim); margin-bottom:2px; }
+  .order-field .val{ font-size:13px; font-weight:600; }
+  .countdown{
+    background:rgba(240,185,11,.1); border:1px solid rgba(240,185,11,.3); border-radius:10px;
+    padding:10px 14px; margin:12px 16px; font-size:12px; color:var(--gold); display:flex; justify-content:space-between;
+  }
+  .countdown b{ font-family:var(--mono); font-size:14px; }
+
+  .pay-instructions{
+    background:var(--panel); border-radius:14px; border:1px solid var(--line);
+    margin:0 16px 12px; padding:14px;
+  }
+  .pay-instructions .h{ font-size:13px; font-weight:700; margin-bottom:10px; }
+  .pi-row{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .pi-row:last-child{ border-bottom:none; }
+  .pi-row .v{ font-weight:700; font-family:var(--mono); }
+  .copy-link{ color:var(--accent); font-size:11px; font-weight:700; cursor:pointer; }
+
+  /* Chat */
+  .chat-area{ padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+  .msg{ max-width:78%; padding:10px 12px; border-radius:12px; font-size:13px; line-height:1.4; }
+  .msg.them{ background:var(--panel-2); align-self:flex-start; border-bottom-left-radius:4px; }
+  .msg.me{ background:var(--accent); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+  .msg.system{ align-self:center; background:transparent; color:var(--ink-dim); font-size:11px; text-align:center; max-width:100%; }
+  .msg-time{ font-size:10px; opacity:.6; margin-top:4px; }
+
+  .order-actions{
+    position:fixed; bottom:0; left:0; right:0; background:var(--panel);
+    border-top:1px solid var(--line); padding:12px 16px; display:flex; gap:10px; z-index:5;
+  }
+  .order-actions button{ flex:1; padding:13px; border-radius:10px; border:none; font-weight:700; font-size:14px; cursor:pointer; }
+  .btn-confirm{ background:var(--green); color:#06241a; }
+  .btn-cancel{ background:var(--panel-2); color:var(--ink-dim); border:1px solid var(--line); }
+
+  .chat-input-row{
+    position:fixed; bottom:0; left:0; right:0; background:var(--panel);
+    border-top:1px solid var(--line); padding:10px 16px; display:flex; gap:10px; z-index:5;
+  }
+  .chat-input-row input{
+    flex:1; background:var(--panel-2); border:1px solid var(--line); border-radius:20px;
+    padding:10px 16px; color:var(--ink); font-size:13px;
+  }
+  .chat-send{
+    width:40px; height:40px; border-radius:50%; background:var(--accent); border:none;
+    color:#fff; font-size:16px; cursor:pointer; flex-shrink:0;
+  }
+
+  /* History */
+  .history-tabs{ display:flex; gap:8px; padding:12px 16px; }
+  .history-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin:0 16px 10px; cursor:pointer;
+  }
+  .history-item .top-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .history-item .type{ font-weight:700; font-size:14px; }
+  .history-item .meta{ font-size:11px; color:var(--ink-dim); }
+  .history-item .amt{ font-family:var(--mono); font-weight:700; font-size:15px; }
+  .history-item .amt.pos{ color:var(--green); }
+  .history-item .amt.neg{ color:var(--red); }
+
+  /* Withdraw */
+  .form-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; margin:14px 16px; }
+  .field-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-dim); margin-bottom:6px; display:block; }
+  .input{
+    width:100%; padding:13px 14px; margin-bottom:14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--ink); font-size:15px;
+  }
+  .input:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  .network-select{ display:flex; gap:8px; margin-bottom:14px; }
+  .network-opt{
+    flex:1; text-align:center; padding:10px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); font-size:12px; font-weight:700; color:var(--ink-dim); cursor:pointer;
+  }
+  .network-opt.active{ border-color:var(--accent); color:var(--accent); background:rgba(59,130,246,.1); }
+  .fee-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--ink-dim); padding:8px 0; border-top:1px solid var(--line); margin-top:4px; }
+  .max-link{ color:var(--accent); font-size:11px; font-weight:700; cursor:pointer; }
+  .balance-hint{ font-size:11px; color:var(--ink-dim); margin:-10px 0 14px; }
+  .btn-primary-full{
+    width:100%; padding:14px; border-radius:10px; border:none; background:var(--accent);
+    color:#fff; font-weight:700; font-size:14px; cursor:pointer; margin-top:4px;
+  }
+
+  .page{ padding-bottom:90px; }
+
+  /* Deposit */
+  .qr-box{
+    display:flex; justify-content:center; padding:16px 0;
+  }
+  .qr-placeholder{
+    width:160px; height:160px; border-radius:14px; background:var(--panel-2);
+    border:1px dashed var(--line); display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:6px; color:var(--ink-dim);
+  }
+  .qr-icon{ font-size:48px; }
+  .qr-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .addr-box{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; font-family:var(--mono); font-size:12px; word-break:break-all;
+    display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px;
+  }
+  .addr-box .copy-link{ flex-shrink:0; }
+
+  /* Deposit menu */
+  .shield-note{
+    display:flex; align-items:flex-start; gap:10px; margin:14px 16px;
+    background:rgba(30,201,139,.08); border:1px solid rgba(30,201,139,.25);
+    border-radius:12px; padding:12px 14px; font-size:12px; color:var(--ink-dim); line-height:1.5;
+  }
+  .shield-icon{ font-size:16px; flex-shrink:0; }
+  .menu-list{ padding:0 16px; margin-bottom:6px; }
+  .menu-item{
+    display:flex; align-items:center; gap:12px; padding:14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; margin-bottom:10px;
+    cursor:pointer;
+  }
+  .menu-icon{
+    width:40px; height:40px; border-radius:50%; background:var(--panel-2);
+    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+  }
+  .menu-text{ flex:1; min-width:0; }
+  .menu-title{ font-weight:700; font-size:14px; }
+  .menu-sub{ font-size:11px; color:var(--ink-dim); margin-top:2px; }
+  .menu-chevron{ font-size:20px; color:var(--ink-dim); flex-shrink:0; }
+  .crypto-search{ padding:12px 16px 4px; }
+
+  /* Escrow */
+  .escrow-box{
+    margin:0 16px 12px; border-radius:14px; border:1px solid rgba(240,185,11,.3);
+    background:rgba(240,185,11,.06); padding:14px;
+  }
+  .escrow-row{ display:flex; gap:10px; align-items:flex-start; }
+  .escrow-icon{ font-size:20px; flex-shrink:0; }
+  .escrow-title{ font-weight:700; font-size:13px; color:var(--gold); }
+  .escrow-sub{ font-size:12px; color:var(--ink-dim); margin-top:3px; line-height:1.4; }
+  .escrow-address{
+    margin-top:10px; padding-top:10px; border-top:1px solid rgba(240,185,11,.2);
+    display:flex; justify-content:space-between; align-items:center; font-size:11px; gap:8px;
+  }
+  .escrow-address .label{ color:var(--ink-dim); flex-shrink:0; }
+  .escrow-address .addr{ font-family:var(--mono); color:var(--ink-dim); text-align:right; word-break:break-all; }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  ⚠ UI Demo <span>— fictional data, not connected to any exchange or real funds</span>
+</div>
+
+<div class="topbar">
+  <div class="brand">Coin<span>Port</span></div>
+  <div class="topbar-icons">
+    <span>🔔</span><span>⚙️</span>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- ASSETS PAGE -->
+  <div id="assetsPage" class="page">
+    <div class="assets-hero">
+      <div class="label">Total Balance</div>
+      <div class="total">12,438.52 <small>USDT</small></div>
+      <div class="sub"><span class="change">+248.10 (2.03%)</span> · Today</div>
+    </div>
+
+    <div class="action-row">
+      <div class="action-btn" onclick="goTo('depositPage')"><span class="icon">⬇️</span>Deposit</div>
+      <div class="action-btn" onclick="goTo('withdrawPage')"><span class="icon">⬆️</span>Withdraw</div>
+      <div class="action-btn"><span class="icon">🔁</span>Convert</div>
+      <div class="action-btn" onclick="goTo('p2pPage')"><span class="icon">🤝</span>P2P</div>
+    </div>
+
+    <div class="section-title">
+      <span>Your Assets</span>
+      <span class="more" onclick="goTo('historyPage')">History</span>
+    </div>
+    <div class="asset-list">
+      <div class="asset-row">
+        <div class="coin-icon usdt">T</div>
+        <div class="asset-info"><div class="name">USDT</div><div class="full">Tether</div></div>
+        <div class="asset-values"><div class="amt">9,820.00</div><div class="usd">≈ $9,820.00</div></div>
+      </div>
+      <div class="asset-row">
+        <div class="coin-icon btc">B</div>
+        <div class="asset-info"><div class="name">BTC</div><div class="full">Bitcoin</div></div>
+        <div class="asset-values"><div class="amt">0.0342</div><div class="usd">≈ $2,210.40</div></div>
+      </div>
+      <div class="asset-row">
+        <div class="coin-icon eth">E</div>
+        <div class="asset-info"><div class="name">ETH</div><div class="full">Ethereum</div></div>
+        <div class="asset-values"><div class="amt">0.118</div><div class="usd">≈ $398.12</div></div>
+      </div>
+      <div class="asset-row">
+        <div class="coin-icon trx">X</div>
+        <div class="asset-info"><div class="name">TRX</div><div class="full">Tron</div></div>
+        <div class="asset-values"><div class="amt">740.00</div><div class="usd">≈ $10.00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- P2P PAGE -->
+  <div id="p2pPage" class="hidden page">
+    <div class="p2p-tabs">
+      <div class="p2p-tab active" data-side="buy">Buy</div>
+      <div class="p2p-tab" data-side="sell">Sell</div>
+    </div>
+    <div class="p2p-filter">
+      <div class="filter-chip active">USDT</div>
+      <div class="filter-chip">All payments</div>
+      <div class="filter-chip">Bank Transfer</div>
+      <div class="filter-chip">Mobile Money</div>
+      <div class="filter-chip">Amount</div>
+    </div>
+
+    <div id="offerList"></div>
+  </div>
+
+  <!-- ORDER DETAIL / CHAT PAGE -->
+  <div id="orderPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('p2pPage')">←</div>
+      <div class="title">Order #DM58213</div>
+    </div>
+    <div class="order-summary">
+      <div class="top-row">
+        <div>
+          <div class="order-field" style="margin-bottom:6px;"><div class="label">You are buying</div></div>
+          <div class="amount" id="orderAmount">500.00 USDT</div>
+        </div>
+        <span class="order-status pending" id="orderStatus">Pending Payment</span>
+      </div>
+      <div class="order-grid">
+        <div class="order-field"><div class="label">Price</div><div class="val">182.40 ETB</div></div>
+        <div class="order-field"><div class="label">Total</div><div class="val">91,200.00 ETB</div></div>
+        <div class="order-field"><div class="label">Merchant</div><div class="val">AsterTrade</div></div>
+        <div class="order-field"><div class="label">Payment Method</div><div class="val">Telebirr</div></div>
+      </div>
+    </div>
+
+    <div class="countdown">
+      <span>Complete payment within</span>
+      <b id="countdownTimer">14:58</b>
+    </div>
+
+    <div class="escrow-box" id="escrowBox">
+      <div class="escrow-row">
+        <span class="escrow-icon">🔒</span>
+        <div class="escrow-text">
+          <div class="escrow-title">500.00 USDT held in platform escrow</div>
+          <div class="escrow-sub">Released to you automatically once the seller confirms your payment.</div>
+        </div>
+      </div>
+      <div class="escrow-address">
+        <span class="label">Escrow account (demo)</span>
+        <span class="addr">DEMO-ESCROW-NOT-REAL-9K2P7QXM</span>
+      </div>
+    </div>
+
+    <div class="pay-instructions">
+      <div class="h">Payment Details</div>
+      <div class="pi-row"><span>Recipient Name</span><span class="v">A. Bekele</span></div>
+      <div class="pi-row"><span>Telebirr Number</span><span class="v">09•• ••• 412 <span class="copy-link">Copy</span></span></div>
+      <div class="pi-row"><span>Reference</span><span class="v">DM58213 <span class="copy-link">Copy</span></span></div>
+    </div>
+
+    <div class="chat-area" id="chatArea">
+      <div class="msg system">Order created · Chat with merchant below</div>
+      <div class="msg them">Hi! Please send the exact amount and include the reference code in the transfer note.<div class="msg-time">09:41</div></div>
+      <div class="msg me">Sure, sending now 👍<div class="msg-time">09:42</div></div>
+      <div class="msg them">Thanks — I'll confirm as soon as it arrives.<div class="msg-time">09:42</div></div>
+    </div>
+
+    <div style="height:64px;"></div>
+
+    <div class="order-actions" id="orderActionsBar">
+      <button class="btn-cancel" onclick="cancelOrder()">Cancel Order</button>
+      <button class="btn-confirm" onclick="markPaid()">I've Paid</button>
+    </div>
+    <div class="chat-input-row hidden" id="chatInputRow">
+      <input type="text" placeholder="Type a message..." id="chatInput">
+      <button class="chat-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div id="historyPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('assetsPage')">←</div>
+      <div class="title">Transaction History</div>
+    </div>
+    <div class="history-tabs">
+      <div class="filter-chip active">All</div>
+      <div class="filter-chip">P2P</div>
+      <div class="filter-chip">Deposits</div>
+      <div class="filter-chip">Withdrawals</div>
+    </div>
+
+    <div class="history-item" onclick="goTo('orderPage')">
+      <div class="top-row"><span class="type">P2P Buy — AsterTrade</span><span class="amt pos">+500.00 USDT</span></div>
+      <div class="meta">Jun 14, 2026 · 09:41 · Completed</div>
+    </div>
+    <div class="history-item">
+      <div class="top-row"><span class="type">Withdrawal — TRC20</span><span class="amt neg">-120.00 USDT</span></div>
+      <div class="meta">Jun 12, 2026 · 18:05 · Completed</div>
+    </div>
+    <div class="history-item">
+      <div class="top-row"><span class="type">P2P Sell — HornCapital</span><span class="amt neg">-300.00 USDT</span></div>
+      <div class="meta">Jun 10, 2026 · 14:22 · Completed</div>
+    </div>
+    <div class="history-item">
+      <div class="top-row"><span class="type">Deposit — TRC20</span><span class="amt pos">+1,000.00 USDT</span></div>
+      <div class="meta">Jun 8, 2026 · 07:50 · Completed</div>
+    </div>
+    <div class="history-item">
+      <div class="top-row"><span class="type">P2P Buy — NileFX</span><span class="amt pos">+250.00 USDT</span></div>
+      <div class="meta">Jun 5, 2026 · 11:30 · Cancelled</div>
+    </div>
+  </div>
+
+  <!-- WITHDRAW PAGE -->
+  <div id="withdrawPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('assetsPage')">←</div>
+      <div class="title">Withdraw USDT</div>
+    </div>
+    <div class="form-card">
+      <label class="field-label">Network</label>
+      <div class="network-select">
+        <div class="network-opt active">TRC20</div>
+        <div class="network-opt">ERC20</div>
+        <div class="network-opt">BEP20</div>
+      </div>
+
+      <label class="field-label">Withdrawal Address</label>
+      <input type="text" class="input" placeholder="Enter or paste address" id="wdAddress">
+
+      <label class="field-label">Amount</label>
+      <input type="number" class="input" placeholder="0.00" id="wdAmount">
+      <div class="balance-hint">Available: 9,820.00 USDT <span class="max-link" onclick="setMax()">Max</span></div>
+
+      <div class="fee-row"><span>Network Fee</span><span>1.00 USDT</span></div>
+      <div class="fee-row"><span>You will receive</span><span id="wdReceive">0.00 USDT</span></div>
+
+      <button class="btn-primary-full" onclick="reviewWithdraw()">Review Withdrawal</button>
+    </div>
+  </div>
+
+  <!-- DEPOSIT MENU PAGE -->
+  <div id="depositPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('assetsPage')">←</div>
+      <div class="title">Deposit</div>
+    </div>
+
+    <div class="shield-note">
+      <span class="shield-icon">🛡️</span>
+      <span>Deposited assets are tracked in this demo wallet only — sandbox simulation, not backed by any real fund.</span>
+    </div>
+
+    <div class="section-title"><span>Top up with crypto</span></div>
+    <div class="menu-list">
+      <div class="menu-item" onclick="goTo('depositCryptoPage')">
+        <div class="menu-icon">⬇️</div>
+        <div class="menu-text">
+          <div class="menu-title">Deposit Crypto</div>
+          <div class="menu-sub">Transfer from other wallets/platforms (demo)</div>
+        </div>
+        <div class="menu-chevron">›</div>
+      </div>
+    </div>
+
+    <div class="section-title"><span>Buy crypto with fiat</span></div>
+    <div class="menu-list">
+      <div class="menu-item" onclick="alert('Demo only — fiat purchase is not available in this sandbox.')">
+        <div class="menu-icon">＋</div>
+        <div class="menu-text">
+          <div class="menu-title">Buy Crypto with USD</div>
+          <div class="menu-sub">Visa, Mastercard, etc. (demo)</div>
+        </div>
+        <div class="menu-chevron">›</div>
+      </div>
+      <div class="menu-item" onclick="alert('Demo only — fiat deposit is not available in this sandbox.')">
+        <div class="menu-icon">⇄</div>
+        <div class="menu-text">
+          <div class="menu-title">Deposit with USD</div>
+          <div class="menu-sub">Bank transfer or online payments (demo)</div>
+        </div>
+        <div class="menu-chevron">›</div>
+      </div>
+      <div class="menu-item" onclick="goTo('p2pPage')">
+        <div class="menu-icon">👥</div>
+        <div class="menu-text">
+          <div class="menu-title">P2P Trading</div>
+          <div class="menu-sub">Buy from sandbox merchants</div>
+        </div>
+        <div class="menu-chevron">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPOSIT: SELECT CRYPTO PAGE -->
+  <div id="depositCryptoPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('depositPage')">←</div>
+      <div class="title">Select Crypto</div>
+    </div>
+    <div class="crypto-search">
+      <input type="text" class="input" placeholder="Search" style="margin-bottom:0;">
+    </div>
+    <div class="section-title"><span>Top Assets</span></div>
+    <div class="menu-list">
+      <div class="menu-item" onclick="openDepositAddress('USDT','Tether')">
+        <div class="coin-icon usdt">T</div>
+        <div class="menu-text"><div class="menu-title">USDT</div><div class="menu-sub">Tether</div></div>
+        <div class="menu-chevron">›</div>
+      </div>
+      <div class="menu-item" onclick="openDepositAddress('BTC','Bitcoin')">
+        <div class="coin-icon btc">B</div>
+        <div class="menu-text"><div class="menu-title">BTC</div><div class="menu-sub">Bitcoin</div></div>
+        <div class="menu-chevron">›</div>
+      </div>
+      <div class="menu-item" onclick="openDepositAddress('ETH','Ethereum')">
+        <div class="coin-icon eth">E</div>
+        <div class="menu-text"><div class="menu-title">ETH</div><div class="menu-sub">Ethereum</div></div>
+        <div class="menu-chevron">›</div>
+      </div>
+      <div class="menu-item" onclick="openDepositAddress('TRX','Tron')">
+        <div class="coin-icon trx">X</div>
+        <div class="menu-text"><div class="menu-title">TRX</div><div class="menu-sub">Tron</div></div>
+        <div class="menu-chevron">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEPOSIT: ADDRESS PAGE -->
+  <div id="depositAddressPage" class="hidden page">
+    <div class="subheader">
+      <div class="back-btn" onclick="goTo('depositCryptoPage')">←</div>
+      <div class="title">Deposit <span id="depTitleCoin">USDT</span></div>
+    </div>
+    <div class="form-card">
+      <label class="field-label">Network</label>
+      <div class="network-select">
+        <div class="network-opt active" data-net="TRC20 (Demo)">TRC20</div>
+        <div class="network-opt" data-net="ERC20 (Demo)">ERC20</div>
+        <div class="network-opt" data-net="BEP20 (Demo)">BEP20</div>
+      </div>
+
+      <div class="qr-box">
+        <div class="qr-placeholder">
+          <span class="qr-icon">▦</span>
+          <span class="qr-label">QR Code</span>
+        </div>
+      </div>
+
+      <label class="field-label">Deposit Address</label>
+      <div class="addr-box">
+        <span id="depAddress">DEMO-NOT-A-REAL-ADDRESS-7F3K9Q2L8XM1</span>
+        <span class="copy-link" onclick="copyDepAddress()">Copy</span>
+      </div>
+      <div class="balance-hint" id="depNetworkNote">Network: TRC20 (Demo) · Sandbox address — sending real funds here does nothing</div>
+
+      <div class="fee-row"><span>Minimum Deposit</span><span>1.00 USDT</span></div>
+      <div class="fee-row"><span>Estimated Arrival</span><span>~1–3 confirmations (demo)</span></div>
+
+      <button class="btn-primary-full" onclick="simulateDeposit()">Simulate Incoming Deposit (Demo)</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-btn active" data-page="assetsPage"><span class="nav-icon">💰</span>Assets</div>
+  <div class="nav-btn" data-page="p2pPage"><span class="nav-icon">🤝</span>P2P</div>
+  <div class="nav-btn"><span class="nav-icon">📊</span>Markets</div>
+  <div class="nav-btn"><span class="nav-icon">👤</span>Profile</div>
+</div>
+
+<script>
+const buyOffers = [
+  { name:'AsterTrade', initial:'A', rate:182.40, avail:1820, limit:'500 – 18,000', methods:['Telebirr','CBE Birr'], orders:1284, rate_pct:98.7 },
+  { name:'NileFX', initial:'N', rate:182.10, avail:5400, limit:'1,000 – 50,000', methods:['Bank Transfer'], orders:842, rate_pct:99.2 },
+  { name:'QuickSwapET', initial:'Q', rate:181.95, avail:980, limit:'200 – 9,500', methods:['M-Pesa','Telebirr'], orders:356, rate_pct:97.5 },
+];
+const sellOffers = [
+  { name:'AddisP2P', initial:'A', rate:183.80, avail:2100, limit:'500 – 20,000', methods:['CBE Birr','Awash Bank'], orders:990, rate_pct:99.0 },
+  { name:'HornCapital', initial:'H', rate:184.05, avail:7600, limit:'1,000 – 60,000', methods:['Bank Transfer'], orders:1502, rate_pct:99.4 },
+  { name:'EastLink', initial:'E', rate:183.50, avail:1200, limit:'300 – 12,000', methods:['Telebirr'], orders:421, rate_pct:96.8 },
+];
+
+function renderOffers(side){
+  const offers = side === 'buy' ? buyOffers : sellOffers;
+  const priceClass = side === 'buy' ? '' : 'sell';
+  const btnClass = side === 'buy' ? 'buy' : 'sell';
+  const btnLabel = side === 'buy' ? 'Buy USDT' : 'Sell USDT';
+
+  document.getElementById('offerList').innerHTML = offers.map(o => `
+    <div class="p2p-offer">
+      <div class="merchant-row">
+        <div class="avatar">${o.initial}</div>
+        <div>
+          <div class="merchant-name">${o.name} <span class="verified-badge">VERIFIED</span></div>
+          <div class="merchant-meta">${o.orders} orders · ${o.rate_pct}% completion</div>
+        </div>
+      </div>
+      <div class="p2p-price ${priceClass}">${o.rate.toFixed(2)} ETB</div>
+      <div class="p2p-details">
+        <span>Available: <b>${o.avail.toLocaleString()} USDT</b></span>
+        <span>Limit: <b>${o.limit} ETB</b></span>
+      </div>
+      <div class="pay-methods">
+        ${o.methods.map(m=>`<span class="pay-chip">${m}</span>`).join('')}
+      </div>
+      <button class="offer-btn ${btnClass}" onclick="goTo('orderPage')">${btnLabel}</button>
+    </div>
+  `).join('');
+}
+renderOffers('buy');
+
+// P2P tab switching
+document.querySelectorAll('.p2p-tab').forEach(tab=>{
+  tab.onclick = () => {
+    document.querySelectorAll('.p2p-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    renderOffers(tab.dataset.side);
+  };
+});
+
+// ===== Unified page navigation =====
+const allPages = ['assetsPage','p2pPage','orderPage','historyPage','withdrawPage','depositPage','depositCryptoPage','depositAddressPage'];
+function goTo(pageId){
+  allPages.forEach(id => document.getElementById(id).classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+
+  // sync bottom nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(pageId === 'assetsPage' || pageId === 'historyPage' || pageId === 'withdrawPage' || pageId === 'depositPage' || pageId === 'depositCryptoPage' || pageId === 'depositAddressPage'){
+    document.querySelector('.nav-btn[data-page="assetsPage"]').classList.add('active');
+  } else if(pageId === 'p2pPage' || pageId === 'orderPage'){
+    document.querySelector('.nav-btn[data-page="p2pPage"]').classList.add('active');
+  }
+
+  if(pageId === 'orderPage'){
+    startCountdown();
+    resetOrderPage();
+  }
+  window.scrollTo(0,0);
+}
+
+// Bottom nav
+document.querySelectorAll('.nav-btn[data-page]').forEach(btn=>{
+  btn.onclick = () => goTo(btn.dataset.page);
+});
+
+// ===== Order page: countdown =====
+let countdownInterval;
+function startCountdown(){
+  clearInterval(countdownInterval);
+  let seconds = 14*60 + 58;
+  const el = document.getElementById('countdownTimer');
+  countdownInterval = setInterval(()=>{
+    seconds--;
+    if(seconds <= 0){ clearInterval(countdownInterval); seconds = 0; }
+    const m = Math.floor(seconds/60), s = seconds%60;
+    el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+function resetOrderPage(){
+  document.getElementById('orderStatus').textContent = 'Pending Payment';
+  document.getElementById('orderStatus').className = 'order-status pending';
+  document.getElementById('orderActionsBar').classList.remove('hidden');
+  document.getElementById('chatInputRow').classList.add('hidden');
+
+  document.getElementById('escrowBox').innerHTML = `
+    <div class="escrow-row">
+      <span class="escrow-icon">🔒</span>
+      <div class="escrow-text">
+        <div class="escrow-title">500.00 USDT held in platform escrow</div>
+        <div class="escrow-sub">Released to you automatically once the seller confirms your payment.</div>
+      </div>
+    </div>
+    <div class="escrow-address">
+      <span class="label">Escrow account (demo)</span>
+      <span class="addr">DEMO-ESCROW-NOT-REAL-9K2P7QXM</span>
+    </div>
+  `;
+
+  document.getElementById('chatArea').innerHTML = `
+    <div class="msg system">Order created · Chat with merchant below</div>
+    <div class="msg them">Hi! Please send the exact amount and include the reference code in the transfer note.<div class="msg-time">09:41</div></div>
+    <div class="msg me">Sure, sending now 👍<div class="msg-time">09:42</div></div>
+    <div class="msg them">Thanks — I'll confirm as soon as it arrives.<div class="msg-time">09:42</div></div>
+  `;
+}
+
+// ===== Order page: actions =====
+window.markPaid = () => {
+  document.getElementById('orderStatus').textContent = 'Paid — Awaiting Confirmation';
+  document.getElementById('orderStatus').className = 'order-status paid';
+  document.getElementById('orderActionsBar').classList.add('hidden');
+  document.getElementById('chatInputRow').classList.remove('hidden');
+  const chat = document.getElementById('chatArea');
+  chat.insertAdjacentHTML('beforeend', `<div class="msg system">You marked this order as paid</div>`);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Simulate the seller confirming receipt and the platform releasing escrow
+  setTimeout(() => {
+    chat.insertAdjacentHTML('beforeend', `<div class="msg them">Payment received, releasing your USDT now ✅<div class="msg-time">${nowTime()}</div></div>`);
+    chat.scrollTop = chat.scrollHeight;
+    releaseEscrow();
+  }, 2200);
+};
+
+function releaseEscrow(){
+  document.getElementById('orderStatus').textContent = 'Completed';
+  document.getElementById('orderStatus').className = 'order-status completed';
+
+  const box = document.getElementById('escrowBox');
+  box.innerHTML = `
+    <div class="escrow-row">
+      <span class="escrow-icon">✅</span>
+      <div class="escrow-text">
+        <div class="escrow-title" style="color:var(--green);">500.00 USDT released to your wallet</div>
+        <div class="escrow-sub">The platform released the escrowed amount to your account balance.</div>
+      </div>
+    </div>
+  `;
+
+  const chat = document.getElementById('chatArea');
+  chat.insertAdjacentHTML('beforeend', `<div class="msg system">Escrow released — 500.00 USDT added to your balance (demo)</div>`);
+  chat.scrollTop = chat.scrollHeight;
+
+  bumpBalance(500);
+}
+
+// Updates the demo Assets balance display
+function bumpBalance(amount){
+  const totalEl = document.querySelector('.assets-hero .total');
+  const usdtAmtEl = document.querySelector('.asset-row .amt');
+  if(totalEl){
+    const current = parseFloat(totalEl.textContent.replace(/[^0-9.]/g,''));
+    totalEl.innerHTML = (current + amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}) + ' <small>USDT</small>';
+  }
+  if(usdtAmtEl){
+    const current = parseFloat(usdtAmtEl.textContent.replace(/[^0-9.]/g,''));
+    usdtAmtEl.textContent = (current + amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+}
+
+function nowTime(){
+  return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+window.cancelOrder = () => {
+  if(!confirm('Cancel this order?')) return;
+  document.getElementById('orderStatus').textContent = 'Cancelled';
+  document.getElementById('orderStatus').className = 'order-status cancelled';
+  document.getElementById('orderActionsBar').classList.add('hidden');
+
+  const box = document.getElementById('escrowBox');
+  box.innerHTML = `
+    <div class="escrow-row">
+      <span class="escrow-icon">↩️</span>
+      <div class="escrow-text">
+        <div class="escrow-title" style="color:var(--red);">Escrow returned to seller</div>
+        <div class="escrow-sub">Order cancelled before payment — no funds were transferred.</div>
+      </div>
+    </div>
+  `;
+};
+
+window.sendChat = () => {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const chat = document.getElementById('chatArea');
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  chat.insertAdjacentHTML('beforeend', `<div class="msg me">${escapeHtml(text)}<div class="msg-time">${time}</div></div>`);
+  chat.scrollTop = chat.scrollHeight;
+  input.value = '';
+};
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ===== Withdraw page =====
+document.querySelectorAll('#withdrawPage .network-opt').forEach(opt=>{
+  opt.onclick = () => {
+    document.querySelectorAll('#withdrawPage .network-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+  };
+});
+
+document.getElementById('wdAmount').addEventListener('input', (e)=>{
+  const val = parseFloat(e.target.value) || 0;
+  const receive = Math.max(val - 1, 0);
+  document.getElementById('wdReceive').textContent = receive.toFixed(2) + ' USDT';
+});
+
+window.setMax = () => {
+  const input = document.getElementById('wdAmount');
+  input.value = '9820.00';
+  input.dispatchEvent(new Event('input'));
+};
+
+window.reviewWithdraw = () => {
+  const addr = document.getElementById('wdAddress').value.trim();
+  const amount = parseFloat(document.getElementById('wdAmount').value);
+  if(!addr){ alert('Enter a withdrawal address.'); return; }
+  if(!amount || amount <= 0){ alert('Enter a valid amount.'); return; }
+  if(amount > 9820){ alert('Amount exceeds available balance.'); return; }
+  alert(`Demo only — this would review a withdrawal of ${amount.toFixed(2)} USDT to:\n${addr}\n\nNo real transaction occurs.`);
+};
+
+// ===== Deposit page =====
+const demoAddresses = {
+  'TRC20 (Demo)': 'DEMO-NOT-A-REAL-ADDRESS-7F3K9Q2L8XM1',
+  'ERC20 (Demo)': 'DEMO-NOT-A-REAL-ADDRESS-0xAB12CD34EF56',
+  'BEP20 (Demo)': 'DEMO-NOT-A-REAL-ADDRESS-BNB99ZZ11QQ77'
+};
+
+document.querySelectorAll('#depositAddressPage .network-opt').forEach(opt=>{
+  opt.onclick = () => {
+    document.querySelectorAll('#depositAddressPage .network-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    const net = opt.dataset.net;
+    document.getElementById('depAddress').textContent = demoAddresses[net];
+    document.getElementById('depNetworkNote').textContent =
+      `Network: ${net} · Sandbox address — sending real funds here does nothing`;
+  };
+});
+
+window.openDepositAddress = (coin, fullName) => {
+  document.getElementById('depTitleCoin').textContent = coin;
+  // reset to first network each time
+  document.querySelectorAll('#depositAddressPage .network-opt').forEach((o,i)=>o.classList.toggle('active', i===0));
+  const firstNet = document.querySelector('#depositAddressPage .network-opt').dataset.net;
+  document.getElementById('depAddress').textContent = demoAddresses[firstNet];
+  document.getElementById('depNetworkNote').textContent =
+    `Network: ${firstNet} · Sandbox address — sending real funds here does nothing`;
+  goTo('depositAddressPage');
+};
+
+window.copyDepAddress = () => {
+  const text = document.getElementById('depAddress').textContent;
+  navigator.clipboard?.writeText(text);
+  alert('Demo address copied. Reminder: this is not a real deposit address.');
+};
+
+window.simulateDeposit = () => {
+  alert('Demo simulation: in a real exchange this would show a pending/confirmed deposit once funds arrive on-chain. No real funds or balances are affected here.');
+};
+</script>
+</body>
+</html>
